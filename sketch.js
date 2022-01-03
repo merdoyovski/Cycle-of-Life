@@ -33,16 +33,21 @@ var colorPalette = [
 
 
 // SETTINGS
-var mode = ["STATIC", "RANDOM", "STATIC_LOOP", "STATIC_W_START", "STATIC"];
+var mode = ["RANDOM", "STATIC_LOOP", "STATIC_W_START", "STATIC"];
 var lastMode, lastPalette, lastDnaCount
 
+function customUI() {
+    let h5 = createElement('div', 'im an h5 p5.element!');
+    h5.style('color', '#00a1d3');
+    h5.position(0, 0);
+}
 function setup() {
     createCanvas(WIDTH, HEIGHT);
     angleMode(DEGREES)
     gui = createGui('My awesome GUI');
 
     gui.addGlobals('colorPalette', 'mode', 'initialDnaCountRandom', 'diameter', 'dnaHeight', 'waveCount');
-
+    customUI()
     if (mode == "RANDOM")
         createRandomScene();
     else if (mode == "STATIC")

@@ -47,7 +47,7 @@ function setup() {
     gui = createGui('My awesome GUI');
 
     gui.addGlobals('colorPalette', 'mode', 'initialDnaCountRandom', 'diameter', 'dnaHeight', 'waveCount');
-    customUI()
+    //customUI()
     if (mode == "RANDOM")
         createRandomScene();
     else if (mode == "STATIC")

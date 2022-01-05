@@ -1,18 +1,19 @@
 // GLOBALS
-const HEIGHT = window.innerHeight
-const WIDTH = window.innerWidth
+const HEIGHT = 1080
+const WIDTH = 1920
 /*
 const HEIGHT = 1080
 const WIDTH = 1920*/
 var diameter = 4
-var dnaHeight = 10;
+var dnaHeight = 14;
 var waveCount = 10;
 let DNAs = []
 var gui;
+let maxScale = 2;
 
 // GLOBALS FOR RANDOM MODE
-var initialDnaCountRandom = 10;
-
+var initialDnaCountRandom = 25;
+p5.disableFriendlyErrors = true; // disables FES
 // COLOR PALETTES
 let myPalette1 = ["#95998A", "#BDCC94", "#FFEC67", "#FFFFFF", "#A9B6CC"];
 let dnaPalette = ["#6060FF", "#FEFE00", "#3EFB00", "#F82620", "#B45A00"];
@@ -28,19 +29,43 @@ var colorPalette = [
     dnaPalette,
     customPalette2,
     customPalette3
-
 ]
-
+var colorPaletteDummy = [
+    customPalette1,
+    myPalette1,
+    dnaPalette,
+    customPalette2,
+    customPalette3
+]
 
 // SETTINGS
 var mode = ["RANDOM", "STATIC_LOOP", "STATIC_W_START", "STATIC"];
 var lastMode, lastPalette, lastDnaCount
 
-function customUI() {
-    let h5 = createElement('div', 'im an h5 p5.element!');
-    h5.style('color', '#00a1d3');
-    h5.position(0, 0);
+// Record settings
+let encoder
+
+let cwidth = WIDTH
+let cheight = HEIGHT
+
+const frate = 30 // frame rate
+const numFrames = 9000 // num of frames to record
+let recording = false
+let recordedFrames = 0
+
+function preload() {
+    HME.createH264MP4Encoder().then(enc => {
+        encoder = enc
+        encoder.outputFilename = 'test'
+        encoder.width = cwidth
+        encoder.height = cheight
+        encoder.frameRate = frate
+        encoder.kbps = 50000 // video quality
+        encoder.groupOfPictures = 10 // lower if you have fast actions.
+        encoder.initialize()
+    })
 }
+
 function setup() {
     createCanvas(WIDTH, HEIGHT);
     angleMode(DEGREES)
@@ -56,16 +81,19 @@ function setup() {
         createScene();
     else if (mode == "STATIC_W_START")
         createScene();
+    translate(0, 0)
+    recording = true
 }
 
 function createScene() {
-    let scaleBy = 5;
+    let scaleBy = 1;
     let transX = 0, transY = 0;
     let rot = 0;
 
     // Starts with right most
     // Right 1
     scaleBy = 5;
+
     DNAs.push(new DNA(-150,
         HEIGHT / scaleBy,
         -90,
@@ -134,39 +162,77 @@ function createRandomScene() {
 }
 
 function addRandomDNA() {
-    let scaleBy = random(0.5, 2.5)
-    if (random() > 0.5) {
+    let scaleBy = random(0.5, 5)
 
-        DNAs.push(new DNA(0,
-            HEIGHT,
-            -90,
+    let xOffset = 500
+    let yOffset = 0
+
+    let rand = 0.1
+    if (rand > 0.66) {
+
+        DNAs.push(new DNA(random(-xOffset, width * 1.5),
+            random(yOffset, height - yOffset),
+            0,
+            scaleBy))
+    }
+    else if (rand > 0.33) {
+
+        DNAs.push(new DNA(random(0, width),
+            random(yOffset, height * 2.5),
+            - 90,
             scaleBy))
     }
     else {
-
-        DNAs.push(new DNA(0,
-            noise((-HEIGHT / 2 + dnaHeight * scaleBy, -dnaHeight * scaleBy)),
-            0,
+        DNAs.push(new DNA(random((-width / 2), width / 1.5),
+            random(-height, height * 2), //random(-height, height * 2)
+            random(-90, 90),
             scaleBy))
     }
 }
 
 function removeRandom() {
-
     DNAs.splice((Math.random() * DNAs.length) | 0, 1);
-
 }
 
 function draw() {
     background(0);
-
+    print(frameCount)
     for (let index = 0; index < DNAs.length; index++) {
         push()
         DNAs[index].display()
         pop()
     }
+    // keep adding new frame
+    if (recording) {
+        encoder.addFrameRgba(drawingContext.getImageData(0, 0, encoder.width, encoder.height).data);
+        recordedFrames++
+    }
+    // finalize encoding and export as mp4
+    if (recordedFrames === numFrames) {
+        recording = false
+        recordedFrames = 0
 
+        encoder.finalize()
+        const uint8Array = encoder.FS.readFile(encoder.outputFilename);
+        const anchor = document.createElement('a')
+        anchor.href = URL.createObjectURL(new Blob([uint8Array], { type: 'video/mp4' }))
+        anchor.download = encoder.outputFilename
+        anchor.click()
+        encoder.delete()
+
+        preload() // reinitialize encoder
+    }
     updateCanvasOnChange()
+
+}
+
+function changeColor() {
+    let randPalette = random(colorPaletteDummy)
+    while (lastPalette == randPalette) {
+        randPalette = random(colorPaletteDummy)
+    }
+    colorPalette = randPalette
+
 }
 
 function updateCanvasOnChange() {
@@ -185,7 +251,6 @@ function updateCanvasOnChange() {
     if (colorPalette != lastPalette) {
         for (let index = 0; index < DNAs.length; index++) {
             DNAs[index].color = random(colorPalette)
-
         }
 
     }
@@ -209,24 +274,45 @@ function updateCanvasOnChange() {
 class DNA {
     constructor(x = 0, y = 0, rot = 0, scaleBy = 1, circleNum = 1) {
         this.circleNum = circleNum
-        this.x = x;
-        this.y = y;
         this.rot = rot;
         this.scaleBy = scaleBy;
+        this.x = x;
+        this.y = y;
         this.target = 0
         this.connected = false;
         this.color = random(colorPalette)
         this.colorChanged = false;
+
+        let dnaOffset = (dnaHeight + diameter) * this.scaleBy
+        if (this.rot == -90) {
+            this.x = constrain(this.x + dnaOffset, dnaOffset, width - dnaOffset)
+        } else if (this.rot == 0) {
+            this.x = this.x - width * scaleBy
+            this.y = constrain(this.y + dnaOffset, dnaOffset, height - dnaOffset)
+
+        } else {
+
+        }
     }
 
     display() {
-        scale(this.scaleBy)
 
+
+        // DNAs.push(new DNA(random(-width / 1.1, width / 1.1),
+        //     random((dnaHeight + diameter) * scaleBy, height - (dnaHeight + diameter) * scaleBy),
+        //     0,
+        //     scaleBy))
+
+
+        // for rot -90
+        //translate(this.x, this.y - 1 * (HEIGHT / (maxScale / this.scaleBy)))
         translate(this.x, this.y)
         rotate(this.rot)
+        scale(this.scaleBy)
+
 
         for (let i = 0; i < this.circleNum; i++) {
-            var x = i * (width) / (this.circleNum) / this.scaleBy * 2;
+            var x = i * (WIDTH) / (this.circleNum);
 
 
             if (this.connected) {
@@ -241,18 +327,18 @@ class DNA {
 
             stroke(this.color);
             if (i % 2 == 1 && this.connected) {
-                line(x, height / 2 + dnaHeight * sin(i * waveCount + frameCount),
-                    x, height / 2 - dnaHeight * sin(i * waveCount + frameCount))
+                line(x, dnaHeight * sin(i * waveCount + frameCount),
+                    x, - dnaHeight * sin(i * waveCount + frameCount))
             }
 
             noStroke();
             // Helix 1
             circle(x,
-                height / 2 + dnaHeight * sin(i * waveCount + frameCount),
+                +dnaHeight * sin(i * waveCount + frameCount),
                 diameter);
             // Helix 2
             circle(x,
-                height / 2 - dnaHeight * sin(i * waveCount + frameCount),
+                -dnaHeight * sin(i * waveCount + frameCount),
                 diameter);
         }
         this.bounce(15, 300);
@@ -272,6 +358,7 @@ class DNA {
 
 
                 if (random(1) > 0.5) {
+                    changeColor()
                     removeRandom()
                     addRandomDNA()
                     DNAs.sort((a, b) => a.scaleBy - b.scaleBy)

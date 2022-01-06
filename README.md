@@ -17,5 +17,3 @@ You can either try out the parameters provided in UI or edit the code yourself b
 ## To Record Your Sketch
 
 Take a look at sketches/sketchRecording.js for exacty same code with a recording option. Refer to [this article](https://medium.com/swlh/video-export-from-p5-js-sketch-1b9b6287801a) for the recording process.
-
-Reach me out at mertmalaz@gmail.com for any questions related to this project.

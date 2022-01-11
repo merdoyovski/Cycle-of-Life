@@ -59,9 +59,9 @@ function setup() {
     angleMode(DEGREES)
     gui = createGui('Cycle of Life');
     sliderRange(0, 30, 1);
-    gui.addGlobals("Color_Palette", 'mode', 'Initial_DNA_Count', 'Atom_Diameter');
+    gui.addGlobals("Color_Palette", 'mode', 'Atom_Diameter');
     sliderRange(0, 100, 1);
-    gui.addGlobals('DNA_Height', 'DNA_Wave_Count');
+    gui.addGlobals("Initial_DNA_Count", 'DNA_Height', 'DNA_Wave_Count');
 
     if (mode == "RANDOM")
         createRandomScene();

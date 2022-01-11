@@ -4,15 +4,15 @@ const WIDTH = window.innerWidth
 /*
 const HEIGHT = 1080
 const WIDTH = 1920*/
-var diameter = 4
-var dnaHeight = 14;
-var waveCount = 10;
+var Atom_Diameter = 4
+var DNA_Height = 14;
+var DNA_Wave_Count = 10;
 let DNAs = []
 var gui;
 let maxScale = 2;
 
 // GLOBALS FOR RANDOM MODE
-var initialDnaCountRandom = 25;
+var Initial_DNA_Count = 25;
 p5.disableFriendlyErrors = true; // disables FES
 // COLOR PALETTES
 let myPalette1 = ["#95998A", "#BDCC94", "#FFEC67", "#FFFFFF", "#A9B6CC"];
@@ -23,13 +23,25 @@ let customPalette1 = ["#f72585", "#b5179e", "#7209b7", "#560bad", "#480ca8", "#3
 let customPalette2 = ["#ef476f", "#ffd166", "#06d6a0", "#118ab2", "#073b4c"];
 let customPalette3 = ["#053c5e", "#1d3958", "#353652", "#4c334d", "#643047", "#7c2e41", "#942b3b", "#ab2836", "#c32530", "#db222a"];
 
-var colorPalette = [
-    customPalette1,
-    myPalette1,
-    dnaPalette,
-    customPalette2,
-    customPalette3
+var colorPalette
+
+var Color_Palette = [
+    "Neon Knights",
+    "Soft Touch",
+    "ATGS",
+    "Child's Play",
+    "Dracula"
 ]
+
+
+var colorPaletteStr1 = {
+    "Neon Knights": customPalette1,
+    "Soft Touch": myPalette1,
+    "ATGS": dnaPalette,
+    "Child's Play": customPalette2,
+    "Dracula": customPalette3
+}
+
 var colorPaletteDummy = [
     customPalette1,
     myPalette1,
@@ -39,22 +51,25 @@ var colorPaletteDummy = [
 ]
 
 // SETTINGS
-var mode = ["RANDOM", "STATIC_LOOP", "STATIC_W_START", "STATIC"];
-var lastMode, lastPalette, lastDnaCount
+var mode = ["RANDOM", "STATIC_LOOP (In Progress)", "STATIC_W_START (In Progress)", "STATIC (In Progress)"];
+var lastMode, lastPalette, lastDnaCount, lastPaletteStr
 
 function setup() {
     createCanvas(WIDTH, HEIGHT);
     angleMode(DEGREES)
-    gui = createGui('My awesome GUI');
-    gui.addGlobals('colorPalette', 'mode', 'initialDnaCountRandom', 'diameter', 'dnaHeight', 'waveCount');
+    gui = createGui('Cycle of Life');
+    sliderRange(0, 30, 1);
+    gui.addGlobals("Color_Palette", 'mode', 'Initial_DNA_Count', 'Atom_Diameter');
+    sliderRange(0, 100, 1);
+    gui.addGlobals('DNA_Height', 'DNA_Wave_Count');
 
     if (mode == "RANDOM")
         createRandomScene();
-    else if (mode == "STATIC")
+    else if (mode == "STATIC (In Progress)")
         createScene();
-    else if (mode == "STATIC_LOOP")
+    else if (mode == "STATIC_LOOP (In Progress)")
         createScene();
-    else if (mode == "STATIC_W_START")
+    else if (mode == "STATIC_W_START (In Progress)")
         createScene();
 
 }
@@ -81,7 +96,7 @@ function createScene() {
         scaleBy))
     // Right 3
     scaleBy = 2
-    DNAs.push(new DNA(-dnaHeight * scaleBy * 2,
+    DNAs.push(new DNA(-DNA_Height * scaleBy * 2,
         HEIGHT / scaleBy,
         -90,
         scaleBy))
@@ -127,7 +142,7 @@ function createScene() {
 }
 
 function createRandomScene() {
-    for (let i = 0; i < initialDnaCountRandom; i++) {
+    for (let i = 0; i < Initial_DNA_Count; i++) {
         addRandomDNA()
     }
     /* Sorting the DNA array by their scale
@@ -201,33 +216,35 @@ function updateCanvasOnChange() {
         DNAs = []
         if (mode == "RANDOM")
             createRandomScene();
-        else if (mode == "STATIC")
+        else if (mode == "STATIC (In Progress)")
             createScene();
-        else if (mode == "STATIC_LOOP")
+        else if (mode == "STATIC_LOOP (In Progress)")
             createScene();
-        else if (mode == "STATIC_W_START")
+        else if (mode == "STATIC_W_START (In Progress)")
             createScene();
     }
-    if (colorPalette != lastPalette) {
+    if (Color_Palette != lastPaletteStr) {
+        colorPalette = colorPaletteStr1[Color_Palette]
         for (let index = 0; index < DNAs.length; index++) {
             DNAs[index].color = random(colorPalette)
         }
     }
-    if (lastDnaCount != initialDnaCountRandom) {
+    if (lastDnaCount != Initial_DNA_Count) {
         DNAs = []
         if (mode == "RANDOM")
             createRandomScene();
-        else if (mode == "STATIC")
+        else if (mode == "STATIC (In Progress)")
             createScene();
-        else if (mode == "STATIC_LOOP")
+        else if (mode == "STATIC_LOOP (In Progress)")
             createScene();
-        else if (mode == "STATIC_W_START")
+        else if (mode == "STATIC_W_START (In Progress)")
             createScene();
 
     }
     lastPalette = colorPalette
     lastMode = mode
-    lastDnaCount = initialDnaCountRandom
+    lastDnaCount = Initial_DNA_Count
+    lastPaletteStr = Color_Palette
 }
 
 class DNA {
@@ -242,7 +259,7 @@ class DNA {
         this.color = random(colorPalette)
         this.colorChanged = false;
 
-        let dnaOffset = (dnaHeight + diameter) * this.scaleBy
+        let dnaOffset = (DNA_Height + Atom_Diameter) * this.scaleBy
         if (this.rot == -90) {
             this.x = constrain(this.x + dnaOffset, dnaOffset, width - dnaOffset)
         } else if (this.rot == 0) {
@@ -274,19 +291,19 @@ class DNA {
 
             stroke(this.color);
             if (i % 2 == 1 && this.connected) {
-                line(x, dnaHeight * sin(i * waveCount + frameCount),
-                    x, - dnaHeight * sin(i * waveCount + frameCount))
+                line(x, DNA_Height * sin(i * DNA_Wave_Count + frameCount),
+                    x, - DNA_Height * sin(i * DNA_Wave_Count + frameCount))
             }
 
             noStroke();
             // Helix 1
             circle(x,
-                +dnaHeight * sin(i * waveCount + frameCount),
-                diameter);
+                +DNA_Height * sin(i * DNA_Wave_Count + frameCount),
+                Atom_Diameter);
             // Helix 2
             circle(x,
-                -dnaHeight * sin(i * waveCount + frameCount),
-                diameter);
+                -DNA_Height * sin(i * DNA_Wave_Count + frameCount),
+                Atom_Diameter);
         }
         this.bounce(15, 300);
     }
@@ -313,7 +330,7 @@ class DNA {
             }
             this.circleNum = lerp(this.circleNum, this.target, 0.002)
         }
-        else if (mode == "STATIC_LOOP") {
+        else if (mode == "STATIC_LOOP (In Progress)") {
             if (this.circleNum < x + 5) {
                 this.target = y;
                 this.connected = true
@@ -327,7 +344,7 @@ class DNA {
             }
             this.circleNum = lerp(this.circleNum, this.target, 0.002)
         }
-        else if (mode == "STATIC_W_START") {
+        else if (mode == "STATIC_W_START (In Progress)") {
 
             this.connected = false
             this.target = y;
@@ -335,7 +352,7 @@ class DNA {
                 this.connected = true
             this.circleNum = lerp(this.circleNum, this.target, 0.0005)
         }
-        else if (mode == "STATIC") {
+        else if (mode == "STATIC (In Progress)") {
             this.circleNum = 500
             this.connected = true
         }

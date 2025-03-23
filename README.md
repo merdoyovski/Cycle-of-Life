@@ -4,7 +4,7 @@ Visualization of the cycle of life and the chaos inside the living. Atoms repres
 
 Implemented using [P5.js](https://p5js.org/) library. Currently using [P5.gui](https://github.com/bitcraftlab/p5.gui) for UI.
 
-- [Live Demo](https://cycle-of-life.vercel.app/)
+- [Live Demo]([https://cycle-of-life.vercel.app/](https://cycle-of-life--nine.vercel.app/))
 
 ## Technical Details
 
